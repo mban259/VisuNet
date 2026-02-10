@@ -15,11 +15,14 @@ class SimpleCNN(nn.Module):
 
         self.fc = nn.Linear(8*7*7, 10)
 
-    def forward(self, x):
-        x = self.relu1(self.conv1(x))  # 4 * 28 * 28
-        x = self.pool(x)               # 4 * 14 * 14
-        x = self.relu2(self.conv2(x))  # 8 * 14 * 14
-        x = self.pool(x)               # 8 * 7 * 7
-        x = x.view(x.size(0), -1)
-        x = self.fc(x)
-        return x
+    def forward(self, x, return_features=False):
+        h1 = self.relu1(self.conv1(x))  # 4 * 28 * 28
+        h2 = self.pool(h1)               # 4 * 14 * 14
+        h3 = self.relu2(self.conv2(h2))  # 8 * 14 * 14
+        h4 = self.pool(h3)               # 8 * 7 * 7
+        h5 = h4.view(x.size(0), -1)
+        out = self.fc(h5)
+
+        if return_features:
+            return out, h1, h2, h3, h4, h5
+        return out

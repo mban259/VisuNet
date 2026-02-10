@@ -95,6 +95,28 @@ def preprocess(canvas_img):
     return x, img_28
 
 
+def show_channels_horizontal(tensor, title):
+    """
+    tensor: (1, N, H, W)
+    """
+    st.subheader(title)
+    n_channels = tensor.shape[1]
+    cols = st.columns(n_channels)
+    for i in range(n_channels):
+        img = tensor[0, i].detach().cpu().numpy()
+        cols[i].image(img, clamp=True, width=70)
+
+
+def show_liner(tensor, title):
+    """
+    tensor: (1, N)
+    """
+    st.subheader(title)
+    vec = tensor[0].detach().cpu().numpy()
+    img = np.repeat(vec[np.newaxis, :], 50, axis=0)
+    st.image(img, clamp=True, width=800)
+
+
 # ----------------------------
 # Inference
 # ----------------------------
@@ -107,9 +129,17 @@ if st.button("Submit"):
         st.subheader("Preprocessed Image")
         st.image(img, clamp=True, width=140)
 
+        # 各層の出力を取得
+
         with torch.no_grad():
-            logits = model(x)
-            probs = torch.softmax(logits[0], dim=0)
+            out, h1, h2, h3, h4, h5 = model(x, True)
+            probs = torch.softmax(out[0], dim=0)
+
+        show_channels_horizontal(h1, "Conv1 + ReLU")
+        show_channels_horizontal(h2, "Pool1")
+        show_channels_horizontal(h3, "Conv2 + ReLU")
+        show_channels_horizontal(h4, "Pool2")
+        show_liner(h5, "Flatten")
 
         pred = torch.argmax(probs).item()
 
